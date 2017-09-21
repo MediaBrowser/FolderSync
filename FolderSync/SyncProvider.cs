@@ -6,12 +6,12 @@ using MediaBrowser.Model.Querying;
 using MediaBrowser.Model.Sync;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
+using System.IO;
 
 namespace FolderSync
 {
@@ -35,7 +35,7 @@ namespace FolderSync
         {
             var fullPath = GetFullPath(remotePath, target);
 
-            _fileSystem.CreateDirectory(Path.GetDirectoryName(fullPath));
+            _fileSystem.CreateDirectory(_fileSystem.GetDirectoryName(fullPath));
 
             _logger.Debug("Folder sync saving stream to {0}", fullPath);
 
@@ -143,9 +143,16 @@ namespace FolderSync
                 files = _fileSystem.GetFiles(account.Path, true)
                    .ToArray();
             }
-            catch (DirectoryNotFoundException)
+            catch (Exception ex)
             {
-                files = new FileSystemMetadata[] { };
+                if (string.Equals(ex.GetType().Name, "DirectoryNotFoundException", StringComparison.Ordinal))
+                {
+                    files = new FileSystemMetadata[] { };
+                }
+                else
+                {
+                    throw;
+                }
             }
 
             result.Items = files;
@@ -218,7 +225,7 @@ namespace FolderSync
         {
             var fullPath = GetFullPath(pathParts, target);
 
-            _fileSystem.CreateDirectory(Path.GetDirectoryName(fullPath));
+            _fileSystem.CreateDirectory(_fileSystem.GetDirectoryName(fullPath));
 
             _logger.Debug("Folder sync copying file from {0} to {1}", path, fullPath);
             _fileSystem.CopyFile(path, fullPath, true);

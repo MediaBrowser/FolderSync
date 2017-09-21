@@ -3,9 +3,9 @@ using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Serialization;
 using System;
-using System.IO;
 using System.Linq;
 using MediaBrowser.Model.Services;
+using MediaBrowser.Model.IO;
 
 namespace FolderSync.Api
 {
@@ -32,10 +32,12 @@ namespace FolderSync.Api
     public class FolderSyncApi : IService
     {
         private readonly IJsonSerializer _json;
+        private IFileSystem _fileSystem;
 
-        public FolderSyncApi(IJsonSerializer json)
+        public FolderSyncApi(IJsonSerializer json, IFileSystem fileSystem)
         {
             _json = json;
+            _fileSystem = fileSystem;
         }
 
         public void Delete(DeleteFolder request)
@@ -60,7 +62,7 @@ namespace FolderSync.Api
                 throw new ArgumentNullException("Path");
             }
 
-            Directory.CreateDirectory(request.Path);
+            _fileSystem.CreateDirectory(request.Path);
 
             var config = Plugin.Instance.Configuration;
             var list = config.SyncAccounts.ToList();
