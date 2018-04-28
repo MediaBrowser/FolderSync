@@ -31,9 +31,9 @@ namespace FolderSync
             get { return true; }
         }
 
-        public async Task<SyncedFileInfo> SendFile(Stream stream, string[] remotePath, SyncTarget target, IProgress<double> progress, CancellationToken cancellationToken)
+        public async Task<SyncedFileInfo> SendFile(SyncJob syncJob, string originalMediaPath, Stream inputStream, bool isMedia, string[] outputPathParts, SyncTarget target, IProgress<double> progress, CancellationToken cancellationToken)
         {
-            var fullPath = GetFullPath(remotePath, target);
+            var fullPath = GetFullPath(outputPathParts, target);
 
             _fileSystem.CreateDirectory(_fileSystem.GetDirectoryName(fullPath));
 
@@ -41,7 +41,7 @@ namespace FolderSync
 
             using (var fileStream = _fileSystem.GetFileStream(fullPath, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read, true))
             {
-                await stream.CopyToAsync(fileStream).ConfigureAwait(false);
+                await inputStream.CopyToAsync(fileStream).ConfigureAwait(false);
                 return GetSyncedFileInfo(fullPath);
             }
         }
@@ -76,14 +76,6 @@ namespace FolderSync
 
         public Task<QueryResult<FileSystemMetadata>> GetFiles(string id, SyncTarget target, CancellationToken cancellationToken)
         {
-            var account = GetSyncAccounts()
-                .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
-
-            if (account == null)
-            {
-                throw new ArgumentException("Invalid SyncTarget supplied.");
-            }
-
             var result = new QueryResult<FileSystemMetadata>();
 
             var file = _fileSystem.GetFileSystemInfo(id);
@@ -97,29 +89,26 @@ namespace FolderSync
             return Task.FromResult(result);
         }
 
-        public Task<QueryResult<FileSystemMetadata>> GetFiles(string[] pathParts, SyncTarget target, CancellationToken cancellationToken)
+        public Task<QueryResult<FileSystemMetadata>> GetFiles(string[] directoryPathParts, SyncTarget target, CancellationToken cancellationToken)
         {
-            var account = GetSyncAccounts()
-                .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
-
-            if (account == null)
-            {
-                throw new ArgumentException("Invalid SyncTarget supplied.");
-            }
-
             var result = new QueryResult<FileSystemMetadata>();
 
-            if (pathParts != null && pathParts.Length > 0)
-            {
-                var fullPath = GetFullPath(pathParts, target);
-                var file = _fileSystem.GetFileSystemInfo(fullPath);
+            var fullPath = GetFullPath(directoryPathParts, target);
 
-                if (file.Exists)
-                {
-                    result.TotalRecordCount = 1;
-                    result.Items = new[] { file }.ToArray();
-                }
+            FileSystemMetadata[] files;
+
+            try
+            {
+                files = _fileSystem.GetFiles(fullPath, true)
+                   .ToArray();
             }
+            catch (DirectoryNotFoundException)
+            {
+                files = Array.Empty<FileSystemMetadata>();
+            }
+
+            result.Items = files;
+            result.TotalRecordCount = files.Length;
 
             return Task.FromResult(result);
         }
@@ -143,16 +132,9 @@ namespace FolderSync
                 files = _fileSystem.GetFiles(account.Path, true)
                    .ToArray();
             }
-            catch (Exception ex)
+            catch (DirectoryNotFoundException)
             {
-                if (string.Equals(ex.GetType().Name, "DirectoryNotFoundException", StringComparison.Ordinal))
-                {
-                    files = new FileSystemMetadata[] { };
-                }
-                else
-                {
-                    throw;
-                }
+                files = Array.Empty<FileSystemMetadata>();
             }
 
             result.Items = files;
@@ -221,14 +203,14 @@ namespace FolderSync
             }
         }
 
-        public Task<SyncedFileInfo> SendFile(string path, string[] pathParts, SyncTarget target, IProgress<double> progress, CancellationToken cancellationToken)
+        public Task<SyncedFileInfo> SendFile(SyncJob syncJob, string originalMediaPath, string inputPath, bool isMedia, string[] outputPathParts, SyncTarget target, IProgress<double> progress, CancellationToken cancellationToken)
         {
-            var fullPath = GetFullPath(pathParts, target);
+            var fullPath = GetFullPath(outputPathParts, target);
 
             _fileSystem.CreateDirectory(_fileSystem.GetDirectoryName(fullPath));
 
-            _logger.Debug("Folder sync copying file from {0} to {1}", path, fullPath);
-            _fileSystem.CopyFile(path, fullPath, true);
+            _logger.Debug("Folder sync copying file from {0} to {1}", inputPath, fullPath);
+            _fileSystem.CopyFile(inputPath, fullPath, true);
 
             return Task.FromResult(GetSyncedFileInfo(fullPath));
         }
