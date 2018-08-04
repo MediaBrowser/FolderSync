@@ -46,11 +46,18 @@ namespace FolderSync
             }
         }
 
-        public Task DeleteFile(string id, SyncTarget target, CancellationToken cancellationToken)
+        public Task<bool> DeleteFile(SyncJob syncJob, string path, SyncTarget target, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {
-                _fileSystem.DeleteFile(id);
+                try
+                {
+                    _fileSystem.DeleteFile(path);
+                }
+                catch (Exception ex)
+                {
+                    _logger.ErrorException("FolderSync: Error removing {0} from {1}.", ex, path, target.Name);
+                }
 
                 var account = GetSyncAccounts()
                     .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
@@ -66,6 +73,7 @@ namespace FolderSync
                     }
                 }
 
+                return true;
             }, cancellationToken);
         }
 
@@ -196,9 +204,17 @@ namespace FolderSync
             foreach (var directory in _fileSystem.GetDirectoryPaths(parent))
             {
                 DeleteEmptyFolders(directory);
-                if (!_fileSystem.GetFileSystemEntryPaths(directory).Any())
+
+                try
                 {
-                    _fileSystem.DeleteDirectory(directory, false);
+                    if (!_fileSystem.GetFileSystemEntryPaths(directory).Any())
+                    {
+                        _fileSystem.DeleteDirectory(directory, false);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.ErrorException("FolderSync: Error during DeleteEmptyFolders in {0}.", ex, directory);
                 }
             }
         }
