@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using System.IO;
+using MediaBrowser.Controller.Library;
 
 namespace FolderSync
 {
@@ -19,11 +20,13 @@ namespace FolderSync
     {
         private readonly IFileSystem _fileSystem;
         private readonly ILogger _logger;
+        private readonly IUserManager _userManager;
 
-        public SyncProvider(IFileSystem fileSystem, ILogger logger)
+        public SyncProvider(IFileSystem fileSystem, ILogger logger, IUserManager userManager)
         {
             _fileSystem = fileSystem;
             _logger = logger;
+            _userManager = userManager;
         }
 
         public bool SupportsRemoteSync
@@ -172,10 +175,12 @@ namespace FolderSync
             get { return Plugin.StaticName; }
         }
 
-        public List<SyncTarget> GetSyncTargets(string userId)
+        public List<SyncTarget> GetSyncTargets(long userId)
         {
+            var userIdString = _userManager.GetGuid(userId).ToString("N");
+
             return GetSyncAccounts()
-                .Where(i => i.EnableAllUsers || i.UserIds.Contains(userId, StringComparer.OrdinalIgnoreCase))
+                .Where(i => i.EnableAllUsers || i.UserIds.Contains(userIdString, StringComparer.OrdinalIgnoreCase))
                 .Select(GetSyncTarget)
                 .ToList();
         }
