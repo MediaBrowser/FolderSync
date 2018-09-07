@@ -11,7 +11,7 @@ using System.IO;
 
 namespace FolderSync
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
         public Plugin(IApplicationPaths appPaths, IXmlSerializer xmlSerializer)
             : base(appPaths, xmlSerializer)
