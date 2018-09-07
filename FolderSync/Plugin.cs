@@ -6,6 +6,8 @@ using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Serialization;
 using System.Threading;
 using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Drawing;
+using System.IO;
 
 namespace FolderSync
 {
@@ -59,6 +61,20 @@ namespace FolderSync
         public PluginConfiguration PluginConfiguration
         {
             get { return Configuration; }
+        }
+
+        public Stream GetThumbImage()
+        {
+            var type = GetType();
+            return type.Assembly.GetManifestResourceStream(type.Namespace + ".Images.thumb.jpg");
+        }
+
+        public ImageFormat ThumbImageFormat
+        {
+            get
+            {
+                return ImageFormat.Jpg;
+            }
         }
     }
 }
