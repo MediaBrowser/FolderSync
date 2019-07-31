@@ -155,9 +155,9 @@
 
                     html += '</div>';
 
-                    html += '<div class="formDialogContent smoothScrollY" style="padding-top:2em;">';
-                    html += '<div class="dialogContentInner dialog-content-centered">';
-                    html += '<form class="newCollectionForm" style="margin:auto;">';
+                    html += '<div is="emby-scroller" data-horizontal="false" data-centerfocus="card" class="formDialogContent">';
+                    html += '<div class="scrollSlider">';
+                    html += '<form class="dialogContentInner dialog-content-centered newCollectionForm" style="padding-top:2em;">';
 
                     html += '<div class="inputContainer"><input id="txtName" type="text" required="required" is="emby-input" label="Display name:" /><div class="fieldDescription">Enter a name to be displayed within sync menus.</div></div>';
 
