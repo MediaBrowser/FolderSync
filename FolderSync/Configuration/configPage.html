@@ -95,7 +95,9 @@
                         $('.userAccessListContainer', page).hide();
                     }
 
-                    $('#chkEnableAllUsers', page).checked(account.EnableAllUsers).trigger('change');
+                    page.querySelector('#chkEnableAllUsers').checked = account.EnableAllUsers;
+                    
+                    $(page.querySelector('#chkEnableAllUsers')).trigger('change');
                 }
 
                 function deleteFolder(page, id) {
@@ -212,7 +214,7 @@
                         var updatedFolder = Object.assign(folder, {
                             Name: $('#txtName', form).val(),
                             Path: $('#txtPath', form).val(),
-                            EnableAllUsers: $('#chkEnableAllUsers', form).checked()
+                            EnableAllUsers: form.querySelector('#chkEnableAllUsers').checked
                         });
 
                         updatedFolder.UserIds = updatedFolder.EnableAllUsers ?
