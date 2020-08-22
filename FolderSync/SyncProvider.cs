@@ -51,33 +51,30 @@ namespace FolderSync
 
         public Task<bool> DeleteFile(SyncJob syncJob, string path, SyncTarget target, CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            try
+            {
+                _fileSystem.DeleteFile(path);
+            }
+            catch (Exception ex)
+            {
+                _logger.ErrorException("FolderSync: Error removing {0} from {1}.", ex, path, target.Name);
+            }
+
+            var account = GetSyncAccounts()
+                .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
+
+            if (account != null)
             {
                 try
                 {
-                    _fileSystem.DeleteFile(path);
+                    DeleteEmptyFolders(account.Path);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    _logger.ErrorException("FolderSync: Error removing {0} from {1}.", ex, path, target.Name);
                 }
+            }
 
-                var account = GetSyncAccounts()
-                    .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
-
-                if (account != null)
-                {
-                    try
-                    {
-                        DeleteEmptyFolders(account.Path);
-                    }
-                    catch
-                    {
-                    }
-                }
-
-                return true;
-            }, cancellationToken);
+            return Task.FromResult(true);
         }
 
         public Task<Stream> GetFile(string id, SyncTarget target, IProgress<double> progress, CancellationToken cancellationToken)
