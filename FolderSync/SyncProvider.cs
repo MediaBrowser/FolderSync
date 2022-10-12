@@ -13,6 +13,7 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Logging;
 using System.IO;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.Entities;
 
 namespace FolderSync
 {
@@ -172,19 +173,22 @@ namespace FolderSync
             get { return Plugin.StaticName; }
         }
 
-        public List<SyncTarget> GetSyncTargets(long userId)
+        public List<SyncTarget> GetSyncTargets(SyncTargetQuery query)
         {
-            var userIdString = _userManager.GetGuid(userId).ToString("N");
+            var accounts = GetSyncAccounts().ToList();
 
-            return GetSyncAccounts()
-                .Where(i => i.EnableAllUsers || i.UserIds.Contains(userIdString, StringComparer.OrdinalIgnoreCase))
+            if (!query.UserId.Equals(0))
+            {
+                var userIdString = _userManager.GetGuid(query.UserId).ToString("N");
+
+                accounts = accounts
+                    .Where(i => i.EnableAllUsers || i.UserIds.Contains(userIdString, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            return accounts
                 .Select(GetSyncTarget)
                 .ToList();
-        }
-
-        public List<SyncTarget> GetAllSyncTargets()
-        {
-            return GetSyncAccounts().Select(GetSyncTarget).ToList();
         }
 
         private SyncTarget GetSyncTarget(SyncAccount account)
