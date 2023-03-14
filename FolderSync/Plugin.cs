@@ -25,8 +25,15 @@ namespace FolderSync
             {
                 new PluginPageInfo
                 {
-                    Name = Name,
-                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html"
+                    Name = "foldersync",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.html",
+                    EnableInMainMenu = true,
+                    MenuIcon = "folder"
+                },
+                new PluginPageInfo
+                {
+                    Name = "foldersyncjs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.configPage.js"
                 }
             };
         }
