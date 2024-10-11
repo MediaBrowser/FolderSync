@@ -124,7 +124,7 @@
         html += '<div class="scrollSlider">';
         html += '<form class="dialogContentInner dialog-content-centered newCollectionForm padded-left padded-right">';
 
-        html += '<div class="inputContainer"><input class="txtName" type="text" required="required" is="emby-input" label="Display name:" /><div class="fieldDescription">Enter a name to be displayed within sync menus.</div></div>';
+        html += '<div class="inputContainer"><input class="txtName" type="text" required="required" is="emby-input" label="Display name:" /><div class="fieldDescription">Enter a name to be displayed within download to menus.</div></div>';
 
         html += '<div class="inputContainer"><input class="txtPath" type="text" required="required" is="emby-input" label="Path:" /></div>';
 
