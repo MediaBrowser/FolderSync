@@ -61,18 +61,25 @@ namespace FolderSync
                 _logger.ErrorException("FolderSync: Error removing {0} from {1}.", ex, path, target.Name);
             }
 
-            var account = GetSyncAccounts()
-                .FirstOrDefault(i => string.Equals(i.Id, target.Id, StringComparison.OrdinalIgnoreCase));
-
-            if (account != null)
+            var parent = _fileSystem.GetDirectoryName(path);
+            if (string.IsNullOrEmpty(parent))
             {
-                try
-                {
-                    DeleteEmptyFolders(account.Path);
-                }
-                catch
-                {
-                }
+                return Task.FromResult(true);
+            }
+
+            parent = _fileSystem.GetDirectoryName(parent);
+            if (string.IsNullOrEmpty(parent))
+            {
+                return Task.FromResult(true);
+            }
+
+            try
+            {
+                _logger.Info("Deleting empty sub-folders from {0}", parent);
+                DeleteEmptyFolders(parent);
+            }
+            catch
+            {
             }
 
             return Task.FromResult(true);
@@ -207,7 +214,9 @@ namespace FolderSync
 
         private void DeleteEmptyFolders(string parent)
         {
-            foreach (var directory in _fileSystem.GetDirectoryPaths(parent))
+            var folders = _fileSystem.GetDirectoryPaths(parent).ToArray();
+
+            foreach (var directory in folders)
             {
                 DeleteEmptyFolders(directory);
 
@@ -215,6 +224,8 @@ namespace FolderSync
                 {
                     if (!_fileSystem.GetFileSystemEntryPaths(directory).Any())
                     {
+                        _logger.Info("Deleting directory: {0}", directory);
+
                         _fileSystem.DeleteDirectory(directory, false);
                     }
                 }
