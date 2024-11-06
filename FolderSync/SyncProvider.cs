@@ -193,9 +193,16 @@ namespace FolderSync
                     .ToList();
             }
 
-            return accounts
+            var list = accounts
                 .Select(GetSyncTarget)
                 .ToList();
+
+            if (!string.IsNullOrEmpty(query.TargetId))
+            {
+                list = list.Where(i => string.Equals(i.Id, query.TargetId, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            return list;
         }
 
         private SyncTarget GetSyncTarget(SyncAccount account)
