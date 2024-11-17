@@ -82,6 +82,21 @@ namespace FolderSync
             {
             }
 
+            parent = _fileSystem.GetDirectoryName(parent);
+            if (string.IsNullOrEmpty(parent))
+            {
+                return Task.FromResult(true);
+            }
+
+            try
+            {
+                _logger.Info("Deleting empty sub-folders from {0}", parent);
+                DeleteEmptyFolders(parent);
+            }
+            catch
+            {
+            }
+
             return Task.FromResult(true);
         }
 
